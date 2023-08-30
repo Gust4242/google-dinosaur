@@ -1,5 +1,6 @@
 import pygame
 import os
+import random
 
 # Criando a tela
 pygame.init()
@@ -28,7 +29,7 @@ BRID = [pygame.image.load(os.path.join('C:\\Users\\Yamac\\OneDrive\\Documentos\\
 
 CLOUD = pygame.image.load(os.path.join('C:\\Users\\Yamac\\OneDrive\\Documentos\\Programação\\FEA.dev\\Github\\Dinossauro\\Images\\Other', 'Cloud.png'))
 
-
+BG = pygame.image.load(os.path.join("C:\\Users\\Yamac\\OneDrive\\Documentos\\Programação\\FEA.dev\\Github\\Dinossauro\\Images\\Other", "Track.png"))
 
 class Dinosaur:
     X_POS = 80  # Coordenada x do dinossauro
@@ -104,10 +105,54 @@ class Dinosaur:
             self.dino_rect.y -= self.jump_vel * 4  # Diminui a coordenada y do dino (o que significa que aumenta a posição dele na tela)    
             self.jump_vel -= 0.8
 
-def main_loop():
+class Cloud:
+    def __init__(self):
+        self.x = SCREEN_WIDTH + random.randint(800, 1000)  # A nuvem aparece em algum lugar entre 800 e 1000 pixels da direita da tela
+        self.y = random.randint(50, 100)  # A nuvem aparece em algum lugar entre 50 e 100 pixels do topo da tela
+        self.image = CLOUD
+        self.width = self.image.get_width()
+
+    def update(self):
+        self.x -= game_speed  # A nuvem se move para a esquerda
+        if self.x < -self.width:
+            self.x = SCREEN_WIDTH + random.randint(2500, 3000)
+            self.y = random.randint(50, 100)
+
+    def draw(self, SCREEN):
+        SCREEN.blit(self.image, (self.x, self.y))
+
+def main():
+    global game_speed, x_pos_bg, y_pos_bg, points
     run = True
     clock = pygame.time.Clock()
     player = Dinosaur()
+    cloud = Cloud()
+    game_speed =14
+    x_pos_bg = 0
+    y_pos_bg = 380
+    points = 0 
+    font = pygame.font.Font('freesansbold.ttf', 20)
+
+    def score():
+        global points, game_speed
+        points += 1
+        if points % 100 == 0:
+            game_speed += 1  # Aumenta a velocidade do jogo a cada 100 pontos
+
+        text = font.render('Points:', str(points), True, (0, 0, 0))
+        textRect = text.get_rect()  # Tudo nessa porra precisa de coordenadas
+        textRect.center = (1000, 40)
+        SCREEN.blit(text, textRect)
+
+    def background():
+        global x_pos_bg, y_pos_bg
+        image_width = BG.get_width()
+        SCREEN.blit(BG, (x_pos_bg, y_pos_bg))
+        SCREEN.blit(BG, (image_width + x_pos_bg, y_pos_bg))
+        if x_pos_bg <= -image_width:                                # A ideia é que o background vá se movendo, e quando a imagem acabar, põe outr imagem
+            SCREEN.blit(BG, (image_width + x_pos_bg, y_pos_bg))
+            x_pos_bg = 0
+        x_pos_bg -= game_speed
 
     # Loop para permitir sair do jogo no X
     while run:  # As paradas no pygame são sempre em while loop
@@ -116,10 +161,17 @@ def main_loop():
                 run = False
 
         SCREEN.fill((255, 255, 255)) # Preenche a tela com a cor branca
-        user_input = pygame.key.get_pressed()
+        userInput = pygame.key.get_pressed()
 
         player.draw(SCREEN)
-        player.update(user_input)  # Atualiza o dinossauro baseado no input do usuário
+        player.update(userInput)  # Atualiza o dinossauro baseado no input do usuário
 
+        background()
+
+        cloud.draw(SCREEN)
+        cloud.update()
+
+        score()
+        
         clock.tick(30)
         pygame.display.update() 
